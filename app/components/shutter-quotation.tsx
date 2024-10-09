@@ -1,13 +1,13 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Printer, Trash2, Edit, Save, Search } from 'lucide-react'
+import { Printer, Trash2, Save, Search } from 'lucide-react'
 import { Checkbox } from "@/components/ui/checkbox"
 
 type Opening = {
@@ -77,11 +77,7 @@ export default function ShutterQuotation() {
   const [detailedQuotation, setDetailedQuotation] = useState(false)
   const printRef = useRef<HTMLDivElement>(null)
 
-  useEffect(() => {
-    calculateTotalCost()
-  }, [openings, surcharges])
-
-  const calculateTotalCost = () => {
+  const calculateTotalCost = useCallback(() => {
     let baseCost = 0
     let totalSurcharges = 0
 
@@ -118,7 +114,11 @@ export default function ShutterQuotation() {
     const freightCost = totalShutters >= 1 ? 75 + 25 * (totalShutters - 1) : 0
 
     setTotalCost(baseCost + totalSurcharges + freightCost)
-  }
+  }, [openings, surcharges])
+
+  useEffect(() => {
+    calculateTotalCost()
+  }, [calculateTotalCost])
 
   const handleOpeningChange = (id: string, field: keyof Opening, value: string | number) => {
     const newOpenings = openings.map(opening => 

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -34,10 +35,15 @@ const monthlyRevenueData = [
 
 export default function QuotationDashboard() {
   const [searchTerm, setSearchTerm] = useState('')
+  const router = useRouter()
 
   const handleSearch = () => {
     console.log('Searching for:', searchTerm)
     // Implement search functionality here
+  }
+
+  const handleNewQuotation = () => {
+    router.push('/quotation')
   }
 
   return (
@@ -88,7 +94,7 @@ export default function QuotationDashboard() {
       </div>
 
       <div className="flex justify-between items-center mb-6">
-        <Button onClick={() => console.log('Create new quotation')}>
+        <Button onClick={handleNewQuotation}>
           <PlusCircle className="mr-2 h-4 w-4" /> New Quotation
         </Button>
         <div className="flex items-center space-x-2">
