@@ -1,0 +1,66 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model customer {
+  customer_id Int         @id @default(autoincrement())
+  first_name  String      @db.VarChar(50)
+  last_name   String      @db.VarChar(50)
+  email       String      @unique @db.VarChar(100)
+  phone       String?     @db.VarChar(20)
+  address     String?     @db.VarChar(255)
+  city        String?     @db.VarChar(100)
+  state       String?     @db.VarChar(50)
+  zip_code    String?     @db.VarChar(20)
+  quotation   quotation[]
+}
+
+model opening {
+  opening_id       Int       @id @default(autoincrement())
+  quotation_id     Int
+  type             String?   @db.VarChar(50)
+  width            Decimal?  @db.Decimal(6, 2)
+  height           Decimal?  @db.Decimal(6, 2)
+  quantity         Int?
+  mount_type       String?   @db.VarChar(50)
+  frame_style      String?   @db.VarChar(50)
+  operating_system String?   @db.VarChar(50)
+  base_cost        Decimal?  @db.Decimal(10, 2)
+  quotation        quotation @relation(fields: [quotation_id], references: [quotation_id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([quotation_id], map: "idx_opening_quotation")
+}
+
+model quotation {
+  quotation_id  Int        @id @default(autoincrement())
+  customer_id   Int
+  creation_date DateTime?  @default(dbgenerated("CURRENT_DATE")) @db.Date
+  total_cost    Decimal    @db.Decimal(10, 2)
+  surcharges_id Int
+  opening       opening[]
+  customer      customer   @relation(fields: [customer_id], references: [customer_id], onDelete: NoAction, onUpdate: NoAction)
+  surcharges    surcharges @relation(fields: [surcharges_id], references: [surcharges_id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([customer_id], map: "idx_quotation_customer")
+  @@index([surcharges_id], map: "idx_quotation_surcharges")
+}
+
+model surcharges {
+  surcharges_id       Int         @id @default(autoincrement())
+  double_hung         Int?        @default(0)
+  extensions          Int?        @default(0)
+  casing_frame        Boolean?    @default(false)
+  clearview           Boolean?    @default(false)
+  hidden_tilt         Boolean?    @default(false)
+  stainless_hinges    Int?        @default(0)
+  deluxe_valance      Decimal?    @default(0) @db.Decimal(10, 2)
+  french_door_cutouts Int?        @default(0)
+  extension_poles     Int?        @default(0)
+  specialty_shapes    Decimal?    @default(0) @db.Decimal(10, 2)
+  quotation           quotation[]
+}
