@@ -160,9 +160,39 @@ export default function ShutterQuotation() {
     }
   }
 
-  const handleSave = () => {
-    // Implement save functionality here
-    console.log('Saving quotation...')
+  const handleSave = async () => {
+    try {
+      const response = await fetch('/api/quotations', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          customerInfo,
+          openings,
+          surcharges,
+          totalCost,
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to save quotation')
+      }
+
+      const { savedQuotation, isExistingCustomer } = await response.json()
+      console.log('Quotation saved successfully:', savedQuotation)
+      
+      if (isExistingCustomer) {
+        alert('A customer with this email already exists. The quotation has been saved using the existing customer information.')
+      } else {
+        alert('Quotation saved successfully!')
+      }
+      
+      // You can add additional logic here, like resetting the form or redirecting
+    } catch (error) {
+      console.error('Error saving quotation:', error)
+      alert('An error occurred while saving the quotation. Please try again.')
+    }
   }
 
   const handleSearch = () => {
