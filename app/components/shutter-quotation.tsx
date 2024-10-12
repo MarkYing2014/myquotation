@@ -7,8 +7,12 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Printer, Trash2, Save, Search } from 'lucide-react'
+import { Printer, Trash2, Save, Search, Mail } from 'lucide-react'
 import { Checkbox } from "@/components/ui/checkbox"
+
+
+
+
 
 type Opening = {
   id: string
@@ -159,6 +163,62 @@ export default function ShutterQuotation() {
       }
     }
   }
+  
+  const sendQuotationEmail = async () => {
+    try {
+      const response = await fetch('/api/send-quotation-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          customerInfo,
+          openings,
+          surcharges,
+          totalCost,
+          detailedQuotation,
+        }),
+      });
+  
+      if (!response.ok) {
+        throw new Error('Failed to send email');
+      }
+  
+      alert('Quotation email sent successfully!');
+    } catch (error) {
+      console.error('Error sending email:', error);
+      alert('An error occurred while sending the email. Please try again.');
+    }
+  }
+
+  const clearData = () => {
+    setOpenings([{ id: '1', type: '', width: 0, height: 0, quantity: 0, mountType: '', frameStyle: '', operatingSystem: '', baseCost: 22 }])
+    setSurcharges({
+      doubleHung: 0,
+      extensions: 0,
+      casingFrame: false,
+      clearview: false,
+      hiddenTilt: false,
+      stainlessHinges: 0,
+      deluxeValance: 0,
+      frenchDoorCutouts: 0,
+      extensionPoles: 0,
+      specialtyShapes: 0
+    })
+    setCustomerInfo({
+      firstName: '',
+      lastName: '',
+      email: '',
+      phone: '',
+      address: '',
+      city: '',
+      state: '',
+      zipCode: ''
+    })
+    setTotalCost(0)
+    setSearchTerm('')
+    setDetailedQuotation(false)
+  }
 
   const handleSave = async () => {
     try {
@@ -187,8 +247,10 @@ export default function ShutterQuotation() {
       } else {
         alert('Quotation saved successfully!')
       }
+
+      // Clear the data after successful save
+      clearData()
       
-      // You can add additional logic here, like resetting the form or redirecting
     } catch (error) {
       console.error('Error saving quotation:', error)
       alert('An error occurred while saving the quotation. Please try again.')
@@ -629,6 +691,10 @@ export default function ShutterQuotation() {
           <Button onClick={handleSave}>
             <Save className="w-4 h-4 mr-2" />
             Save
+          </Button>
+          <Button onClick={sendQuotationEmail}>
+            <Mail className="w-4 h-4 mr-2" />
+            Send Email
           </Button>
         </div>
         <div className="flex gap-2">

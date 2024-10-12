@@ -15,6 +15,13 @@ interface Opening {
   baseCost: number
 }
 
+// Define an interface for the monthly revenue item
+interface MonthlyRevenueItem {
+  month: string
+  year: number
+  revenue: string
+}
+
 export async function POST(request: Request) {
   try {
     const body = await request.json()
@@ -93,6 +100,57 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error('Error saving quotation:', error)
     return NextResponse.json({ error: 'Error saving quotation' }, { status: 500 })
+  } finally {
+    await prisma.$disconnect()
+  }
+}
+
+export async function GET() {
+  try {
+    const quotations = await prisma.quotation.findMany({
+      include: {
+        customer: true,
+      },
+      orderBy: {
+        creation_date: 'desc',
+      },
+    });
+
+    const formattedQuotations = quotations.map((q) => ({
+      id: q.quotation_id.toString(),
+      customer: `${q.customer.first_name} ${q.customer.last_name}`,
+      total: parseFloat(q.total_cost.toString()),
+      date: q.creation_date ? q.creation_date.toISOString().split('T')[0] : '',
+    }));
+
+    // Calculate monthly revenue
+    const monthlyRevenue = await prisma.$queryRaw<MonthlyRevenueItem[]>`
+      SELECT 
+        TO_CHAR(creation_date, 'Mon') AS month,
+        EXTRACT(YEAR FROM creation_date) AS year,
+        SUM(total_cost)::text AS revenue
+      FROM 
+        quotation
+      GROUP BY 
+        EXTRACT(YEAR FROM creation_date),
+        EXTRACT(MONTH FROM creation_date),
+        TO_CHAR(creation_date, 'Mon')
+      ORDER BY 
+        year DESC,
+        EXTRACT(MONTH FROM creation_date) DESC
+      LIMIT 12
+    `;
+
+    return NextResponse.json({
+      quotations: formattedQuotations,
+      monthlyRevenue: monthlyRevenue.map(item => ({
+        name: `${item.month} ${item.year}`,
+        revenue: parseFloat(item.revenue)
+      }))
+    });
+  } catch (error) {
+    console.error('Error fetching data:', error);
+    return NextResponse.json({ error: 'Error fetching data' }, { status: 500 });
   } finally {
     await prisma.$disconnect()
   }
